@@ -19,13 +19,7 @@
     "keywords": [],
     "author": "Olillin<oli@olillin.com",
     "license": "MIT",
-    "devEngines": {
-        "packageManager": {
-            "name": "pnpm",
-            "version": "^11.15.0",
-            "onFail": "download"
-        }
-    },
+    "packageManager": "pnpm@11.22.0",
     "dependencies": {
         "@rollup/plugin-commonjs": "^29.0.3",
         "@rollup/plugin-node-resolve": "^16.0.3",
