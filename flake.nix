@@ -11,6 +11,7 @@
         nativeBuildInputs = [ pkgs.bashInteractive ];
         buildInputs = with pkgs; [
           docker
+          mdformat
           nodejs_24
           pnpm
         ];
