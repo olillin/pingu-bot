@@ -28,4 +28,8 @@ export async function processNewThread(channel: AnyThreadChannel) {
             )
         })
     }
+
+    channel.leave().catch(reason => {
+        console.error('Failed to leave thread: ', reason)
+    })
 }
