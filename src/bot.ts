@@ -15,7 +15,10 @@ import { initGuild } from './data'
 import { processNewThread } from './features/ping'
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds],
+    intents: [
+        GatewayIntentBits.Guilds, //
+        GatewayIntentBits.MessageContent,
+    ],
 }) as ExtendedClient
 client.commands = commands
 
@@ -23,9 +26,11 @@ export default client
 
 // Thread create
 client.on(Events.ThreadCreate, channel => {
-    processNewThread(channel).catch(reason => {
-        console.error('Failed to process new thread: ', reason)
-    })
+    setTimeout(() => {
+        processNewThread(channel).catch(reason => {
+            console.error('Failed to process new thread: ', reason)
+        })
+    }, 500)
 })
 
 // Command executor

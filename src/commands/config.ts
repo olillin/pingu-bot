@@ -42,6 +42,17 @@ const commands: ConfigurationCommandOptions<any, any>[] = [
         get: value => value.toString(),
         disableUnset: true,
     }),
+
+    defineConfigurationCommand({
+        type: ApplicationCommandOptionType.Boolean as const,
+        key: 'extraInfo' as const,
+        name: 'extra-info',
+        description: 'Include extra info in ping',
+
+        set: value => value,
+        get: value => value.toString(),
+        disableUnset: true,
+    }),
 ]
 
 export default defineCommand({

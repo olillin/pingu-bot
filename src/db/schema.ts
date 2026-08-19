@@ -11,4 +11,5 @@ export const guilds = pgTable('guilds', {
 
     pingRole: snowflake('ping_role'),
     ghostPing: boolean('ghost_ping').notNull().default(true),
+    extraInfo: boolean('extra_info').notNull().default(false),
 })

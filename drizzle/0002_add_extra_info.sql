@@ -1,0 +1,1 @@
+ALTER TABLE "guilds" ADD COLUMN "extra_info" boolean DEFAULT false NOT NULL;
