@@ -22,3 +22,7 @@ Configure the bot, supports the following options:
 - extra-info, whether to include extra info from the first channel message in
   the ping message. This is intended to produce a richer notification. Defaults
   to false.
+
+#### /send
+
+Send the ping again in the current thread.
