@@ -1,0 +1,5 @@
+allowBuilds:
+    esbuild: true
+
+patchedDependencies:
+    discord.js: patches/discord.js.patch

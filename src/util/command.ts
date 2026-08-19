@@ -1,0 +1,472 @@
+import {
+    ApplicationCommandOptionBase,
+    ApplicationCommandOptionType,
+    ChatInputCommandInteraction,
+    MessageFlags,
+    SlashCommandAttachmentOption,
+    SlashCommandBooleanOption,
+    SlashCommandBuilder,
+    SlashCommandChannelOption,
+    SlashCommandIntegerOption,
+    SlashCommandMentionableOption,
+    SlashCommandNumberOption,
+    SlashCommandOptionsOnlyBuilder,
+    SlashCommandRoleOption,
+    SlashCommandStringOption,
+    SlashCommandSubcommandsOnlyBuilder,
+    SlashCommandUserOption,
+} from 'discord.js'
+import {
+    getGuildConfigValue,
+    getGuildId,
+    GuildConfigKey,
+    GuildConfigType,
+    setGuildConfigValue,
+} from '../data'
+import { MaybePromise } from '../types'
+
+export function defineCommand<T extends CommandDefinition>(commandData: T): T {
+    return commandData
+}
+
+export interface CommandDefinition {
+    data:
+        | SlashCommandBuilder
+        | SlashCommandOptionsOnlyBuilder
+        | SlashCommandSubcommandsOnlyBuilder
+    execute(interaction: ChatInputCommandInteraction): Promise<void>
+}
+
+export type CommandData = ReturnType<SlashCommandBuilder['toJSON']>
+
+export type CommandMap = {
+    [command: string]: (
+        interaction: ChatInputCommandInteraction
+    ) => Promise<void>
+}
+
+export type CommandTree = {
+    [group: string]: CommandMap
+}
+
+export type SlashCommandOptionTypes = Exclude<
+    ApplicationCommandOptionType,
+    1 | 2
+>
+export type SlashCommandOptionsBase = {
+    [type in SlashCommandOptionTypes]: [
+        ApplicationCommandOptionBase,
+        keyof ChatInputCommandInteraction['options'],
+    ]
+}
+export interface SlashCommandOptions extends SlashCommandOptionsBase {
+    3: [SlashCommandStringOption, 'getString']
+    4: [SlashCommandIntegerOption, 'getInteger']
+    5: [SlashCommandBooleanOption, 'getBoolean']
+    6: [SlashCommandUserOption, 'getUser']
+    7: [SlashCommandChannelOption, 'getChannel']
+    8: [SlashCommandRoleOption, 'getRole']
+    9: [SlashCommandMentionableOption, 'getMentionable']
+    10: [SlashCommandNumberOption, 'getNumber']
+    11: [SlashCommandAttachmentOption, 'getAttachment']
+}
+
+export type CommandOptionWithType<OptionType extends SlashCommandOptionTypes> =
+    SlashCommandOptions[OptionType][0]
+export type CommandOptionReturnType<
+    OptionType extends SlashCommandOptionTypes,
+> = NonNullable<
+    ReturnType<
+        ChatInputCommandInteraction['options'][SlashCommandOptions[OptionType][1]]
+    >
+>
+
+export interface ConfigurationCommandOptions<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+> {
+    /** The type of command option */
+    type: OptionType
+    /* The key to the value in the configuration */
+    key: KeyType
+
+    /** The name of the command */
+    name: string
+    /**
+     * The descriptive name of what this command will set. Used in subcommand
+     * descriptions and replies.
+     * @example "Link to calendar"
+     */
+    description: string
+
+    /**
+     * The name of the option in the 'set' subcommand. Defaults to command name
+     * if unset.
+     */
+    optionName?: string
+    /** Set extra properties for the option like min and max values. */
+    optionExtras?: (option: CommandOptionWithType<OptionType>) => void
+
+    /**
+     * Convert the option value to a the string value to be saved in the
+     * configuration. If the value cannot be used, throw an error with an
+     * explanatory message.
+     */
+    set: (
+        value: CommandOptionReturnType<OptionType>,
+        context: ChatInputCommandInteraction
+    ) => MaybePromise<GuildConfigType<KeyType>>
+
+    /**
+     * Convert the saved value to the string representation which should be sent
+     */
+    get: (
+        value: GuildConfigType<KeyType>,
+        context: ChatInputCommandInteraction
+    ) => MaybePromise<string>
+
+    /**
+     * Will be run when the value is changed or removed.
+     * @param value The new value of the configuration property.
+     * @param context The interaction that triggered the change.
+     */
+    onChange?: (
+        value: GuildConfigType<KeyType> | undefined,
+        context: ChatInputCommandInteraction
+    ) => MaybePromise<void>
+}
+
+export function defineConfigurationCommand<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+>(
+    options: ConfigurationCommandOptions<OptionType, KeyType>
+): ConfigurationCommandOptions<OptionType, KeyType> {
+    return options
+}
+
+export function addConfigurationCommand<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+>(
+    command: ConfigurationCommandOptions<OptionType, KeyType>,
+    builder: SlashCommandBuilder
+) {
+    builder.addSubcommandGroup(subcommandGroup =>
+        subcommandGroup
+            .setName(command.name)
+            .setDescription(command.description)
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('get')
+                    .setDescription(`Get the value of ${command.description}`)
+            )
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('unset')
+                    .setDescription(`Remove value of ${command.description}`)
+            )
+            .addSubcommand(subcommand => {
+                subcommand
+                    .setName('set')
+                    .setDescription(`Change value of ${command.description}`)
+                function setupOption<T extends SlashCommandOptionTypes>(
+                    builder: CommandOptionWithType<T>
+                ): CommandOptionWithType<T> {
+                    builder
+                        .setName(command.optionName ?? command.name)
+                        .setDescription(command.description)
+                        .setRequired(true)
+                    if (command.optionExtras) {
+                        command.optionExtras(builder)
+                    }
+                    return builder
+                }
+                switch (command.type) {
+                    case ApplicationCommandOptionType.String:
+                        subcommand.addStringOption(
+                            setupOption<ApplicationCommandOptionType.String>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Integer:
+                        subcommand.addStringOption(
+                            setupOption<ApplicationCommandOptionType.String>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Boolean:
+                        subcommand.addBooleanOption(
+                            setupOption<ApplicationCommandOptionType.Boolean>
+                        )
+                        break
+                    case ApplicationCommandOptionType.User:
+                        subcommand.addUserOption(
+                            setupOption<ApplicationCommandOptionType.User>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Channel:
+                        subcommand.addChannelOption(
+                            setupOption<ApplicationCommandOptionType.Channel>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Role:
+                        subcommand.addRoleOption(
+                            setupOption<ApplicationCommandOptionType.Role>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Mentionable:
+                        subcommand.addMentionableOption(
+                            setupOption<ApplicationCommandOptionType.Mentionable>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Number:
+                        subcommand.addNumberOption(
+                            setupOption<ApplicationCommandOptionType.Number>
+                        )
+                        break
+                    case ApplicationCommandOptionType.Attachment:
+                        subcommand.addAttachmentOption(
+                            setupOption<ApplicationCommandOptionType.Attachment>
+                        )
+                        break
+                }
+                return subcommand
+            })
+    )
+}
+
+export function addConfigurationCommands<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+>(
+    commands: ConfigurationCommandOptions<OptionType, KeyType>[],
+    builder: SlashCommandBuilder
+) {
+    commands.forEach(command => {
+        addConfigurationCommand(command, builder)
+    })
+}
+
+export function getOption<T extends SlashCommandOptionTypes>(
+    interaction: ChatInputCommandInteraction,
+    name: string,
+    type: T
+): CommandOptionReturnType<T> {
+    switch (type) {
+        case ApplicationCommandOptionType.String:
+            return interaction.options.getString(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Integer:
+            return interaction.options.getInteger(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Boolean:
+            return interaction.options.getBoolean(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.User:
+            return interaction.options.getUser(
+                name,
+                true
+            ) as unknown as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Channel:
+            return interaction.options.getChannel(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Role:
+            return interaction.options.getRole(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Mentionable:
+            return interaction.options.getMentionable(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Number:
+            return interaction.options.getNumber(
+                name,
+                true
+            ) as CommandOptionReturnType<T>
+        case ApplicationCommandOptionType.Attachment:
+            return interaction.options.getAttachment(
+                name,
+                true
+            ) as unknown as CommandOptionReturnType<T>
+    }
+}
+
+/** Represents an error that should be presented to the user. */
+export class CommandResponseError extends Error {
+    constructor(message: string) {
+        super(message)
+    }
+}
+
+export async function replyWithError(
+    interaction: ChatInputCommandInteraction,
+    error: unknown,
+    ephemeral: boolean = false
+) {
+    await interaction.reply({
+        content:
+            error instanceof CommandResponseError
+                ? error.message
+                : 'An unexpected error occurred, try again later',
+        flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+    })
+}
+
+export async function editReplyWithError(
+    interaction: ChatInputCommandInteraction,
+    error: unknown
+) {
+    if (error instanceof CommandResponseError) {
+        await interaction.editReply(error.message)
+    } else {
+        await interaction.editReply(
+            'An unexpected error occurred, try again later'
+        )
+    }
+}
+
+export async function executeConfigurationCommand<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+>(
+    command: ConfigurationCommandOptions<OptionType, KeyType>,
+    interaction: ChatInputCommandInteraction
+) {
+    const subcommand = interaction.options.getSubcommand(true)
+    const guildSnowflake = interaction.guildId!
+    const guildId = await getGuildId(guildSnowflake)
+    if (guildId === null) {
+        await interaction.reply({
+            content: 'Failed to find configuration for this guild',
+            flags: MessageFlags.Ephemeral,
+        })
+        console.error(
+            `Failed to get guild id while executing command '${command.name}'`
+        )
+        return
+    }
+
+    if (subcommand === 'set') {
+        const value = getOption(
+            interaction,
+            command.optionName ?? command.name,
+            command.type
+        )
+
+        let convertedValue: GuildConfigType<KeyType>
+        try {
+            convertedValue = await command.set(value, interaction)
+        } catch (e) {
+            if (e instanceof CommandResponseError) {
+                await interaction.reply({
+                    content: e.message,
+                    flags: MessageFlags.Ephemeral,
+                })
+            } else {
+                await interaction.reply({
+                    content: 'An unexpected error occurred, try again later',
+                    flags: MessageFlags.Ephemeral,
+                })
+                console.error(
+                    `Unexpected error while executing command '${command.name}':`,
+                    e
+                )
+            }
+            return
+        }
+
+        await setGuildConfigValue(guildId, command.key, convertedValue)
+
+        try {
+            const prettyValue = await command.get(convertedValue, interaction)
+            await interaction.reply({
+                content: `${command.description} was set to ${prettyValue}`,
+                flags: MessageFlags.Ephemeral,
+            })
+        } catch {
+            await interaction.reply({
+                content: `${command.description} has been updated`,
+                flags: MessageFlags.Ephemeral,
+            })
+        }
+
+        if (command.onChange)
+            await command.onChange(convertedValue, interaction)
+    } else if (subcommand === 'unset') {
+        const oldValue = await getGuildConfigValue(guildId, command.key)
+        if (oldValue == undefined) {
+            await interaction.reply({
+                content: `${command.description} does not have a value`,
+                flags: MessageFlags.Ephemeral,
+            })
+            return
+        }
+
+        await setGuildConfigValue(guildId, command.key, null)
+
+        await interaction.reply({
+            content: `${command.description} has been deleted`,
+            flags: MessageFlags.Ephemeral,
+        })
+
+        if (command.onChange) await command.onChange(undefined, interaction)
+    } else if (subcommand === 'get') {
+        const value = await getGuildConfigValue(guildId, command.key)
+        if (value == undefined) {
+            await interaction.reply({
+                content: `${command.description} is missing`,
+                flags: MessageFlags.Ephemeral,
+            })
+            return
+        }
+
+        try {
+            const prettyValue = await command.get(value, interaction)
+            await interaction.reply({
+                content: `${command.description} is set to ${prettyValue}`,
+                flags: MessageFlags.Ephemeral,
+            })
+        } catch (e) {
+            await interaction.reply({
+                content: (e as Error).message,
+                flags: MessageFlags.Ephemeral,
+            })
+        }
+    } else {
+        await interaction.reply({
+            content: 'An unexpected error occurred, try again later',
+            flags: MessageFlags.Ephemeral,
+        })
+    }
+}
+
+export function configurationCommandExecutor<
+    OptionType extends SlashCommandOptionTypes,
+    KeyType extends GuildConfigKey,
+>(
+    commands: ConfigurationCommandOptions<OptionType, KeyType>[]
+): (interaction: ChatInputCommandInteraction) => Promise<void> {
+    return async (interaction: ChatInputCommandInteraction) => {
+        const subcommandGroup = interaction.options.getSubcommandGroup(true)
+        const command = commands.find(
+            command => command.name === subcommandGroup
+        )
+        if (!command) {
+            await interaction.reply({
+                content: 'Unknown command',
+                flags: MessageFlags.Ephemeral,
+            })
+            return
+        }
+        await executeConfigurationCommand(command, interaction)
+    }
+}

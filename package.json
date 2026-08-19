@@ -1,0 +1,49 @@
+{
+    "name": "pingu-bot",
+    "homepage": "https://github.com/olillin/pingu-bot",
+    "bugs": {
+        "url": "https://github.com/olillin/pingu-bot/issues"
+    },
+    "main": "bundle/main.js",
+    "type": "module",
+    "scripts": {
+        "build": "tsc && rolldown -c",
+        "start": "node .",
+        "startenv": "node --env-file=.env .",
+        "fmt": "oxfmt",
+        "fmt:check": "oxfmt --check",
+        "postinstall": "(copy-env-cli || true)",
+        "lint": "oxlint -c .oxlintrc.json",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "Olillin<oli@olillin.com",
+    "license": "MIT",
+    "devEngines": {
+        "packageManager": {
+            "name": "pnpm",
+            "version": "^11.15.0",
+            "onFail": "download"
+        }
+    },
+    "dependencies": {
+        "@rollup/plugin-commonjs": "^29.0.3",
+        "@rollup/plugin-node-resolve": "^16.0.3",
+        "discord.js": "^14.27.0",
+        "drizzle-orm": "^0.45.2",
+        "pg": "^8.23.0",
+        "rollup": "^4.62.4",
+        "typescript": "^7.0.2"
+    },
+    "devDependencies": {
+        "@types/node": "^26.2.0",
+        "@types/pg": "^8.23.1",
+        "copy-env-cli": "^1.0.0",
+        "drizzle-kit": "^0.31.10",
+        "globals": "^17.11.0",
+        "oxfmt": "^0.63.0",
+        "oxlint": "^1.78.0",
+        "oxlint-tsgolint": "^7.0.2001",
+        "rolldown": "^1.2.4"
+    }
+}
