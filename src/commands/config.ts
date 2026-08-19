@@ -31,6 +31,17 @@ const commands: ConfigurationCommandOptions<any, any>[] = [
             return role.toString()
         },
     }),
+
+    defineConfigurationCommand({
+        type: ApplicationCommandOptionType.Boolean as const,
+        key: 'ghostPing' as const,
+        name: 'ghost',
+        description: 'Delete message after ping',
+
+        set: value => value,
+        get: value => value.toString(),
+        disableUnset: true,
+    }),
 ]
 
 export default defineCommand({

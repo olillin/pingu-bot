@@ -1,4 +1,4 @@
-import { integer, pgTable, bigint } from 'drizzle-orm/pg-core'
+import { integer, boolean, pgTable, bigint } from 'drizzle-orm/pg-core'
 
 const snowflake = (name?: string) => {
     if (name) return bigint(name, { mode: 'bigint' })
@@ -10,4 +10,5 @@ export const guilds = pgTable('guilds', {
     snowflake: snowflake().notNull().unique(),
 
     pingRole: snowflake('ping_role'),
+    ghostPing: boolean('ghost_ping').notNull().default(true),
 })

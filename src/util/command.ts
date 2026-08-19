@@ -126,6 +126,11 @@ export interface ConfigurationCommandOptions<
     ) => MaybePromise<string>
 
     /**
+     * If set to true the unset subcommand will not be generated for this option
+     */
+    disableUnset?: boolean
+
+    /**
      * Will be run when the value is changed or removed.
      * @param value The new value of the configuration property.
      * @param context The interaction that triggered the change.
@@ -152,7 +157,7 @@ export function addConfigurationCommand<
     command: ConfigurationCommandOptions<OptionType, KeyType>,
     builder: SlashCommandBuilder
 ) {
-    builder.addSubcommandGroup(subcommandGroup =>
+    builder.addSubcommandGroup(subcommandGroup => {
         subcommandGroup
             .setName(command.name)
             .setDescription(command.description)
@@ -160,11 +165,6 @@ export function addConfigurationCommand<
                 subcommand
                     .setName('get')
                     .setDescription(`Get the value of ${command.description}`)
-            )
-            .addSubcommand(subcommand =>
-                subcommand
-                    .setName('unset')
-                    .setDescription(`Remove value of ${command.description}`)
             )
             .addSubcommand(subcommand => {
                 subcommand
@@ -231,7 +231,17 @@ export function addConfigurationCommand<
                 }
                 return subcommand
             })
-    )
+
+        if (!command.disableUnset) {
+            subcommandGroup.addSubcommand(subcommand =>
+                subcommand
+                    .setName('unset')
+                    .setDescription(`Remove value of ${command.description}`)
+            )
+        }
+
+        return subcommandGroup
+    })
 }
 
 export function addConfigurationCommands<

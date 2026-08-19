@@ -1,0 +1,74 @@
+{
+    "id": "084ada5e-5a27-42e4-901f-6cd315dc96d4",
+    "prevId": "c09a4a91-f373-42f4-bbe0-669f433cf61a",
+    "version": "7",
+    "dialect": "postgresql",
+    "tables": {
+        "public.guilds": {
+            "name": "guilds",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "identity": {
+                        "type": "always",
+                        "name": "guilds_id_seq",
+                        "schema": "public",
+                        "increment": "1",
+                        "startWith": "1",
+                        "minValue": "1",
+                        "maxValue": "2147483647",
+                        "cache": "1",
+                        "cycle": false
+                    }
+                },
+                "snowflake": {
+                    "name": "snowflake",
+                    "type": "bigint",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "ping_role": {
+                    "name": "ping_role",
+                    "type": "bigint",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "ghost_ping": {
+                    "name": "ghost_ping",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": true
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "guilds_snowflake_unique": {
+                    "name": "guilds_snowflake_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["snowflake"]
+                }
+            },
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        }
+    },
+    "enums": {},
+    "schemas": {},
+    "sequences": {},
+    "roles": {},
+    "policies": {},
+    "views": {},
+    "_meta": {
+        "columns": {},
+        "schemas": {},
+        "tables": {}
+    }
+}

@@ -22,7 +22,11 @@ client.commands = commands
 export default client
 
 // Thread create
-client.on(Events.ThreadCreate, processNewThread)
+client.on(Events.ThreadCreate, channel => {
+    processNewThread(channel).catch(reason => {
+        console.error('Failed to process new thread: ', reason)
+    })
+})
 
 // Command executor
 client.on(Events.InteractionCreate, interaction => {
@@ -107,11 +111,10 @@ async function processGuilds(guilds: Iterable<Guild>) {
 }
 
 async function processGuild(guild: Guild) {
-    await initGuild(guild.id)
-
     registerSlashCommands(guild.id).catch(reason => {
         console.error('Failed to register slash commands:', reason)
     })
+    await initGuild(guild.id)
 }
 
 client.on(Events.GuildCreate, guild => {

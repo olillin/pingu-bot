@@ -45,7 +45,7 @@ export async function getGuildSnowflake(
     return result[0].snowflake
 }
 
-export type GuildConfigKey = 'pingRole'
+export type GuildConfigKey = 'pingRole' | 'ghostPing'
 export type GuildConfigType<KeyType extends GuildConfigKey> = NonNullable<
     (typeof schema.guilds.$inferSelect)[KeyType]
 >
@@ -95,4 +95,17 @@ export async function getPingRole(guild: Guild): Promise<Role | null> {
     const { pingRole } = result[0]
     if (pingRole == null) return null
     return getRole(pingRole.toString(), guild)
+}
+
+export async function shouldGhostPing(
+    guildSnowflake: string | bigint
+): Promise<boolean> {
+    const result = await db
+        .select({ ghostPing: schema.guilds.ghostPing })
+        .from(schema.guilds)
+        .where(eq(schema.guilds.snowflake, BigInt(guildSnowflake)))
+    if (result.length === 0) return true
+
+    const { ghostPing } = result[0]
+    return ghostPing
 }
