@@ -30,7 +30,7 @@ client.on(Events.ThreadCreate, channel => {
         processNewThread(channel).catch(reason => {
             console.error('Failed to process new thread: ', reason)
         })
-    }, 500)
+    }, 1500)
 })
 
 // Command executor
