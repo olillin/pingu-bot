@@ -19,9 +19,8 @@ Configure the bot, supports the following options:
 
 - role, the role which is pinged when a thread is created.
 - ghost, whether the ping should be deleted after sending. Defaults to true.
-- extra-info, whether to include extra info from the first channel message in
-  the ping message. This is intended to produce a richer notification. Defaults
-  to false.
+- extra-info, whether to send a copy of the first channel message after the
+  ping. Defaults to false.
 - silent-ping, whether to add people to the thread without a ping by editing
   the message. Defaults to true.
 
