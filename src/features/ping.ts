@@ -1,27 +1,18 @@
 import { AnyThreadChannel } from 'discord.js'
-import {
-    getPingRole,
-    isExtraInfoEnabled,
-    isGhostPingEnabled,
-    isSilentPingEnabled,
-} from '../data'
+import { getGuildConfiguration } from '../data'
 
 export async function processNewThread(channel: AnyThreadChannel) {
-    const role = await getPingRole(channel.guild).catch(reason => {
-        console.error(`Failed to get ping role: `, reason)
+    const config = await getGuildConfiguration(channel.guild).catch(reason => {
+        console.error(`Failed to get guild configuration: `, reason)
         return null
     })
-    if (!role) return
+    if (!config?.pingRole) return
 
-    const guildSnowflake = channel.guildId
-    const includeExtraInfo = await isExtraInfoEnabled(guildSnowflake)
-    const sendSilentPing = await isSilentPingEnabled(guildSnowflake)
-
-    let messageContent = sendSilentPing
+    let messageContent = config.silentPing
         ? 'Inviting members...'
-        : role.toString()
+        : config.pingRole.toString()
 
-    if (includeExtraInfo) {
+    if (config.extraInfo) {
         const messages = await channel.messages.fetch()
         const firstMessage = messages.last() // Messages are sorted newest-first
         if (firstMessage) {
@@ -41,12 +32,12 @@ export async function processNewThread(channel: AnyThreadChannel) {
         console.error('Failed to send ping in new thread: ', reason)
     })
     if (!message) return
-    if (sendSilentPing) {
+    if (config.silentPing) {
         if (!message.editable) {
             console.error('Failed to silent ping, message is not editable')
             return
         }
-        await message.edit(role.toString()).catch(reason => {
+        await message.edit(config.pingRole.toString()).catch(reason => {
             console.error(
                 'Failed to silent ping, could not edit message: ',
                 reason
@@ -54,8 +45,7 @@ export async function processNewThread(channel: AnyThreadChannel) {
         })
     }
 
-    const sendGhostPing = await isGhostPingEnabled(guildSnowflake)
-    if (sendGhostPing) {
+    if (config.ghostPing) {
         if (!message.deletable) {
             console.error('Failed to ghost ping, message is not deletable')
             return

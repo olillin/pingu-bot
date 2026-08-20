@@ -53,6 +53,50 @@ export type GuildConfigKey =
 export type GuildConfigType<KeyType extends GuildConfigKey> = NonNullable<
     (typeof schema.guilds.$inferSelect)[KeyType]
 >
+export type GuildConfiguration = Omit<
+    Pick<typeof schema.guilds.$inferSelect, GuildConfigKey>,
+    'pingRole'
+> & { pingRole: Role | null }
+
+export const defaultGuildConfiguration: GuildConfiguration = {
+    pingRole: null,
+    ghostPing: schema.guilds.ghostPing.default as boolean,
+    extraInfo: schema.guilds.extraInfo.default as boolean,
+    silentPing: schema.guilds.silentPing.default as boolean,
+} as const
+
+/**
+ * Get the full configuration of a guild.
+ * @param guild The guild to get the configuration of.
+ * @returns The configuration or the default configuration if the guild is not registered in the database.
+ */
+export async function getGuildConfiguration(
+    guild: Guild
+): Promise<GuildConfiguration> {
+    // Fetch from database
+    const keys = Object.keys(defaultGuildConfiguration) as GuildConfigKey[]
+    const columns = Object.fromEntries(
+        keys.map(key => [key, schema.guilds[key]])
+    ) as { [Key in keyof GuildConfiguration]: (typeof schema.guilds)[Key] }
+
+    const guildSnowflake = BigInt(guild.id)
+    const result = await db
+        .select(columns)
+        .from(schema.guilds)
+        .where(eq(schema.guilds.snowflake, guildSnowflake))
+
+    // Process result
+    if (result.length === 0) return defaultGuildConfiguration
+    const row = result[0]
+    const pingRole =
+        row.pingRole == null
+            ? null
+            : await getRole(row.pingRole.toString(), guild)
+    return {
+        ...row,
+        pingRole,
+    }
+}
 
 /**
  * Get the value of a column in the guild config.
