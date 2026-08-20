@@ -14,11 +14,13 @@ export default defineCommand({
     execute: async interaction => {
         const isThread = interaction.channel?.isThread()
         if (isThread) {
+            await interaction.deferReply({
+                flags: MessageFlags.Ephemeral,
+            })
             await processNewThread(interaction.channel)
                 .then(() => {
-                    void interaction.reply({
+                    void interaction.editReply({
                         content: 'Message was sent sucessfully',
-                        flags: MessageFlags.Ephemeral,
                     })
                 })
                 .catch(reason => {
@@ -26,10 +28,9 @@ export default defineCommand({
                         'Failed to send thread message from command: ',
                         reason
                     )
-                    void interaction.reply({
+                    void interaction.editReply({
                         content:
                             'An unexpected error occurred, please try again later',
-                        flags: MessageFlags.Ephemeral,
                     })
                 })
         } else {
