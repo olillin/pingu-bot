@@ -1,0 +1,1 @@
+ALTER TABLE "guilds" ADD COLUMN "silent_ping" boolean DEFAULT true NOT NULL;

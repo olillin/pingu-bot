@@ -22,6 +22,8 @@ Configure the bot, supports the following options:
 - extra-info, whether to include extra info from the first channel message in
   the ping message. This is intended to produce a richer notification. Defaults
   to false.
+- silent-ping, whether to add people to the thread without a ping by editing
+  the message. Defaults to true.
 
 #### /send
 

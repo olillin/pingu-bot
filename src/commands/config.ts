@@ -53,6 +53,17 @@ const commands: ConfigurationCommandOptions<any, any>[] = [
         get: value => value.toString(),
         disableUnset: true,
     }),
+
+    defineConfigurationCommand({
+        type: ApplicationCommandOptionType.Boolean as const,
+        key: 'silentPing' as const,
+        name: 'silent-ping',
+        description: 'Invite role silently',
+
+        set: value => value,
+        get: value => value.toString(),
+        disableUnset: true,
+    }),
 ]
 
 export default defineCommand({
