@@ -1,6 +1,13 @@
-import { AnyThreadChannel, GuildMember, Message, Webhook } from 'discord.js'
+import {
+    AnyThreadChannel,
+    FetchMessagesOptions,
+    GuildMember,
+    Message,
+    Webhook,
+} from 'discord.js'
 import { getGuildConfiguration } from '../data'
 import { getMemberAvatar, getMemberDisplayName } from '../util/guild'
+import client from '../bot'
 
 export async function processNewThread(channel: AnyThreadChannel) {
     const config = await getGuildConfiguration(channel.guild).catch(reason => {
@@ -56,8 +63,11 @@ export async function processNewThread(channel: AnyThreadChannel) {
 export async function repeatFirstMessage(
     channel: AnyThreadChannel
 ): Promise<void> {
-    const messages = await channel.messages.fetch()
-    const firstMessage = messages.last() // Messages are sorted newest-first
+    const options: FetchMessagesOptions = {}
+    const messages = await channel.messages.fetch(options)
+    const firstMessage = messages
+        .filter(message => message.author.id !== client.user!.id)
+        .last() // Messages are sorted newest-first
     if (!firstMessage) {
         console.warn(
             'Failed to repeat first thread message, cannot read message'
