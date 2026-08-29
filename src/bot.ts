@@ -91,24 +91,6 @@ async function registerSlashCommands(guildId: string) {
     }
 }
 
-client.on(Events.ClientReady, () => {
-    const guilds = client.guilds.cache.values()
-    processGuilds(guilds).catch(reason => {
-        console.error(`Failed to process guilds: ${reason}`)
-    })
-
-    // Set activity
-    if (client.user) {
-        const activity = client.user.setActivity({
-            name: "Making sure @you don't miss things",
-            type: ActivityType.Custom,
-        })
-        console.log('Activity updated: ', activity)
-    } else {
-        console.warn('Could not set activity, client.user is undefined')
-    }
-})
-
 async function processGuilds(guilds: Iterable<Guild>) {
     for (const guild of guilds) {
         await processGuild(guild)
@@ -130,6 +112,22 @@ client.on(Events.GuildCreate, guild => {
 })
 
 client.on(Events.ClientReady, () => {
+    const guilds = client.guilds.cache.values()
+    processGuilds(guilds).catch(reason => {
+        console.error(`Failed to process guilds: ${reason}`)
+    })
+
+    // Set activity
+    if (client.user) {
+        client.user.setActivity({
+            name: "Making sure you don't miss things",
+            type: ActivityType.Custom,
+        })
+        console.log('Updated activity')
+    } else {
+        console.warn('Could not set activity, client.user is undefined')
+    }
+
     Promise.all(
         client.guilds.cache.map(guild => registerSlashCommands(guild.id))
     )
