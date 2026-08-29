@@ -17,7 +17,7 @@ export default defineCommand({
             await interaction.deferReply({
                 flags: MessageFlags.Ephemeral,
             })
-            await processNewThread(interaction.channel)
+            await processNewThread(interaction.channel, true)
                 .then(() => {
                     void interaction.editReply({
                         content: 'Message was sent sucessfully',

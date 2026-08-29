@@ -5,11 +5,26 @@ import {
     Message,
     Webhook,
 } from 'discord.js'
-import { getGuildConfiguration } from '../data'
+import { getGuildConfiguration, getGuildId, isChannelIgnored } from '../data'
 import { getMemberAvatar, getMemberDisplayName } from '../util/guild'
 import client from '../bot'
 
-export async function processNewThread(channel: AnyThreadChannel) {
+export async function processNewThread(
+    channel: AnyThreadChannel,
+    force: boolean = false
+) {
+    if (!force) {
+        const guildId = await getGuildId(channel.guildId)
+        const parentChannel = channel.parent
+        if (guildId !== null && parentChannel !== null) {
+            // Check if ignored
+            const ignored = await isChannelIgnored(guildId, parentChannel.id)
+            if (ignored) {
+                return
+            }
+        }
+    }
+
     const config = await getGuildConfiguration(channel.guild).catch(reason => {
         console.error(`Failed to get guild configuration: `, reason)
         return null

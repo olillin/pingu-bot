@@ -1,12 +1,14 @@
 import { Collection } from 'discord.js'
 import { CommandDefinition } from '../util/command'
+import { default as channels } from './channels'
 import { default as config } from './config'
 import { default as send } from './send'
 
 const commands = new Collection<string, CommandDefinition>()
 
 const definitions: CommandDefinition[] = [
-    config, //
+    channels, //
+    config,
     send,
 ]
 definitions.forEach(definition => {

@@ -1,8 +1,9 @@
-import { Role, type Guild } from 'discord.js'
+import { GuildBasedChannel, Role, type Guild } from 'discord.js'
 import { getRole } from './util/guild'
 import db from './db/client'
 import * as schema from './db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
+import { QueryResult } from 'pg'
 
 export async function initGuild(
     guildSnowflake: string | bigint
@@ -176,4 +177,68 @@ export async function isSilentPingEnabled(
         .where(eq(schema.guilds.snowflake, BigInt(guildSnowflake)))
     if (result.length === 0) return true
     return result[0].value
+}
+
+export async function isChannelIgnored(
+    guildId: number,
+    channelSnowflake: string | bigint
+): Promise<boolean> {
+    const result: QueryResult<{ exists: boolean }> = await db.execute(
+        sql`SELECT EXISTS (SELECT 1 FROM ${schema.channels} WHERE ${schema.channels.snowflake} = ${BigInt(channelSnowflake)} AND ${schema.channels.guildId} = ${guildId})`
+    )
+    return result.rows[0].exists
+}
+
+export async function getChannelExceptions(
+    guild: Guild
+): Promise<(GuildBasedChannel | null)[]> {
+    const guildSnowflake = guild.id
+    const guildId = await getGuildId(guildSnowflake)
+    if (!guildId) {
+        return []
+    }
+    const result = await db
+        .select({ snowflake: schema.channels.snowflake })
+        .from(schema.channels)
+        .where(eq(schema.channels.guildId, guildId))
+
+    // Update cache
+    await guild.channels.fetch()
+
+    const channels = result.map(({ snowflake }) =>
+        guild.channels.cache.get(snowflake.toString())
+    )
+    return channels.map(channel => channel ?? null)
+}
+
+export async function ignoreChannel(
+    guildId: number,
+    channelSnowflake: string | bigint
+) {
+    return db
+        .insert(schema.channels)
+        .values({
+            snowflake: BigInt(channelSnowflake),
+            guildId: guildId,
+        })
+        .returning()
+}
+
+export async function unignoreChannel(
+    guildId: number,
+    channelSnowflake: string | bigint
+) {
+    const result = await db
+        .delete(schema.channels)
+        .where(
+            and(
+                eq(schema.channels.snowflake, BigInt(channelSnowflake)),
+                eq(schema.channels.guildId, guildId)
+            )
+        )
+        .returning()
+
+    if (result.length === 0) {
+        throw new Error('Failed to delete record, does not exist')
+    }
 }

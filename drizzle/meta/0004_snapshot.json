@@ -1,0 +1,146 @@
+{
+    "id": "339c8feb-842f-465d-a3eb-e06510a5b4ee",
+    "prevId": "d7061462-3594-4001-8a87-271d8be03e8f",
+    "version": "7",
+    "dialect": "postgresql",
+    "tables": {
+        "public.channels": {
+            "name": "channels",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "identity": {
+                        "type": "always",
+                        "name": "channels_id_seq",
+                        "schema": "public",
+                        "increment": "1",
+                        "startWith": "1",
+                        "minValue": "1",
+                        "maxValue": "2147483647",
+                        "cache": "1",
+                        "cycle": false
+                    }
+                },
+                "guildId": {
+                    "name": "guildId",
+                    "type": "integer",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "channel_snowflake": {
+                    "name": "channel_snowflake",
+                    "type": "bigint",
+                    "primaryKey": false,
+                    "notNull": true
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {
+                "channels_guildId_guilds_id_fk": {
+                    "name": "channels_guildId_guilds_id_fk",
+                    "tableFrom": "channels",
+                    "tableTo": "guilds",
+                    "columnsFrom": ["guildId"],
+                    "columnsTo": ["id"],
+                    "onDelete": "cascade",
+                    "onUpdate": "no action"
+                }
+            },
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "channels_guildId_channel_snowflake_unique": {
+                    "name": "channels_guildId_channel_snowflake_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["guildId", "channel_snowflake"]
+                }
+            },
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        },
+        "public.guilds": {
+            "name": "guilds",
+            "schema": "",
+            "columns": {
+                "id": {
+                    "name": "id",
+                    "type": "integer",
+                    "primaryKey": true,
+                    "notNull": true,
+                    "identity": {
+                        "type": "always",
+                        "name": "guilds_id_seq",
+                        "schema": "public",
+                        "increment": "1",
+                        "startWith": "1",
+                        "minValue": "1",
+                        "maxValue": "2147483647",
+                        "cache": "1",
+                        "cycle": false
+                    }
+                },
+                "snowflake": {
+                    "name": "snowflake",
+                    "type": "bigint",
+                    "primaryKey": false,
+                    "notNull": true
+                },
+                "ping_role": {
+                    "name": "ping_role",
+                    "type": "bigint",
+                    "primaryKey": false,
+                    "notNull": false
+                },
+                "ghost_ping": {
+                    "name": "ghost_ping",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": true
+                },
+                "extra_info": {
+                    "name": "extra_info",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": false
+                },
+                "silent_ping": {
+                    "name": "silent_ping",
+                    "type": "boolean",
+                    "primaryKey": false,
+                    "notNull": true,
+                    "default": true
+                }
+            },
+            "indexes": {},
+            "foreignKeys": {},
+            "compositePrimaryKeys": {},
+            "uniqueConstraints": {
+                "guilds_snowflake_unique": {
+                    "name": "guilds_snowflake_unique",
+                    "nullsNotDistinct": false,
+                    "columns": ["snowflake"]
+                }
+            },
+            "policies": {},
+            "checkConstraints": {},
+            "isRLSEnabled": false
+        }
+    },
+    "enums": {},
+    "schemas": {},
+    "sequences": {},
+    "roles": {},
+    "policies": {},
+    "views": {},
+    "_meta": {
+        "columns": {},
+        "schemas": {},
+        "tables": {}
+    }
+}
